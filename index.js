@@ -35,10 +35,39 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('common'));
 app.use(cookieParser());
-app.use(cors({
-    credentials: true,
-    origin: process.env.CLIENT_ORIGIN
-}))
+// app.use(cors({
+//     credentials: true,
+//     origin: process.env.CLIENT_ORIGIN
+// }))
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_ORIGIN
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  // 🔥 Handle preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 app.use('/auth',authRouter);
 app.use('/posts',postsRouter);
